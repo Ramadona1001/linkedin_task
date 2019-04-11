@@ -18,9 +18,19 @@ Route::get('/', function () {
 
 //Route::get('/linkedin/callback','LinkedController@callback');
 
-Route::get('login/{provider}', 'LinkedController@redirectToProvider');
+/*Route::get('login/{provider}', 'LinkedController@redirectToProvider');
 Route::get('{provider}/callback', 'LinkedController@handleProviderCallback');
 
 Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');*/
+
+Route::get('linkedin', function () {
+    return view('login');
+});
+Auth::routes();
+
+Route::get('/redirect', 'LinkedController@redirect');
+Route::get('/callback', 'LinkedController@callback');
 
 Route::get('/home', 'HomeController@index')->name('home');

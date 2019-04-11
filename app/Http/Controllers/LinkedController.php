@@ -3,58 +3,62 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Socialite;
 use App\User;
+use Socialite;
 use Auth;
+use Exception;
 
 class LinkedController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
 
-    use AuthenticatesUsers;
+    public function redirect()
+    {
+        return Socialite::driver('linkedin')->redirect();
+    }
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
+
+    public function callback()
+    {
+        try {
+            $linkdinUser = Socialite::driver('linkedin')->user();
+            $existUser = User::where('email',$linkdinUser->email)->first();
+            if($existUser) {
+                Auth::loginUsingId($existUser->id);
+            }
+            else {
+                $user = new User;
+                $user->name = $linkdinUser->name;
+                $user->email = $linkdinUser->email;
+                $user->linkedin_id = $linkdinUser->id;
+                $user->password = md5(rand(1,10000));
+                $user->save();
+                Auth::loginUsingId($user->id);
+            }
+            return redirect()->to('/home');
+        }
+        catch (Exception $e) {
+            return 'error';
+        }
+    }
+
+
+
+
+    /*use AuthenticatesUsers;
+
     protected $redirectTo = '/home';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
     }
 
-    /**
-     * Redirect the user to the Linkedin authentication page.
-     *
-     * @return Response
-     */
     public function redirectToProvider($provider)
     {
         return Socialite::driver($provider)->scopes(['r_basicprofile', 'r_emailaddress'])->redirect();
     }
 
-    /**
-     * Obtain the user information from Linkedin.
-     *
-     * @return Response
-     */
+
     public function handleProviderCallback($provider)
     {
         $user = Socialite::driver($provider)->user();
@@ -63,13 +67,6 @@ class LinkedController extends Controller
         return redirect($this->redirectTo);
     }
 
-    /**
-     * If a user has registered before using social auth, return the user
-     * else, create a new user object.
-     * @param  $user Socialite user object
-     * @param $provider Social auth provider
-     * @return  User
-     */
     public function findOrCreateUser($user, $provider)
     {
         $authUser = User::where('provider_id', $user->id)->first();
@@ -83,5 +80,5 @@ class LinkedController extends Controller
             'provider_id' => $user->id
         ]);
 
-    }
+    }*/
 }
